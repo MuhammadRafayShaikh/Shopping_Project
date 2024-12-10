@@ -1,0 +1,13 @@
+admin dashboard
+email: rafay6744@gmail.com
+password: rafay6744
+
+admin_dashboard_url : localhost:8000/admin.dashboard
+
+user account
+email: rafayshaikh405@gmail.com
+password: 12341234
+
+Import Database 'laravel_shopping_project.sql' Or run migrations by using this command 'php artisan migrate'
+
+Set your email settings in .env for sending email
