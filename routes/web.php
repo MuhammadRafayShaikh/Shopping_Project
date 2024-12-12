@@ -9,7 +9,6 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\FrontController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SubcategoryController;
@@ -62,7 +61,6 @@ Route::get('review/{id}', [ReviewController::class, 'show']);
 Route::resource('review', ReviewController::class);
 Route::post('review/{id}', [ReviewController::class, 'store'])->name('review.store')->middleware('auth');
 Route::delete('review/{id}/{pid}', [ReviewController::class, 'destroy'])->name('review.destroy');
-Route::get('/payment/{amount}', [PaymentController::class, 'payment'])->name('payment');
 Route::post('/payment', [OrderController::class, 'placeOrder']);
 Route::middleware([
     'auth:sanctum',
