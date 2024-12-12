@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Stripe\Stripe;
 use App\Models\Cart;
+use Stripe\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Wishlist;
 use App\Models\OrderItem;
+use Stripe\PaymentIntent;
 use App\Models\Subcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,50 +48,72 @@ class OrderController extends Controller
 
         // return $total_amount;
 
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
-            'address' => 'required|string',
-        ]);
+        Stripe::setApiKey('sk_test_51QC2ODIe4idSW70tDuPsYTghj5mmmTHUbF9PktegF6aT3EkievLJ3NsscCWp6xScUAxAxjGBTsJIw68AGuytkWQj00gzHHR6BL');
 
-        $cartItems = Cart::where('user_id', Auth::id())->get();
-
-        if ($cartItems->isEmpty()) {
-            return redirect()->back()->with('error', 'Your cart is empty!');
-        }
-
-        $totalPrice = $cartItems->sum(function ($item) {
-            return $item->quantity * $item->price;
-        });
-
-        $order = new Order();
-        $order->user_id = Auth::id();
-        $order->address = $request->address;
-        $order->total_price = $totalPrice;
-        $order->payment_status = 'pending';
-        $order->save();
-
-        foreach ($cartItems as $cartItem) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $cartItem->product_id,
-                'quantity' => $cartItem->quantity,
-                'price' => $cartItem->price,
+        try {
+            // Create a customer with name and email
+            $customer = Customer::create([
+                'name' => Auth::user()->name, // Static for now, can be dynamic
+                'email' => Auth::user()->email, // Static for now, can be dynamic
             ]);
-            $productsqty = Product::where('id', $cartItem->product_id);
-            $productsqty->decrement('product_qty', $cartItem->quantity);
+
+            // Create PaymentIntent and attach the customer
+            $paymentIntent = PaymentIntent::create([
+                'amount' => $request->amount * 100, // Stripe accepts amount in cents
+                'currency' => 'usd',
+                'payment_method' => $request->stripeToken,
+                'customer' => $customer->id, // Attach Customer ID
+                'confirmation_method' => 'manual',
+            ]);
+
+            $request->validate([
+                'address' => 'required|string',
+            ]);
+
+            $cartItems = Cart::where('user_id', Auth::id())->get();
+
+            if ($cartItems->isEmpty()) {
+                return redirect()->back()->with('error', 'Your cart is empty!');
+            }
+
+            $totalPrice = $cartItems->sum(function ($item) {
+                return $item->quantity * $item->price;
+            });
+
+            $order = new Order();
+            $order->user_id = Auth::id();
+            $order->address = $request->address;
+            $order->total_price = $totalPrice;
+            $order->payment_status = 'pending';
+            $order->save();
+
+            foreach ($cartItems as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->price,
+                ]);
+                $productsqty = Product::where('id', $cartItem->product_id);
+                $productsqty->decrement('product_qty', $cartItem->quantity);
+            }
+
+            $cart = Cart::where('user_id', Auth::id());
+
+            $cart->get();
+
+            $cart->delete();
+
+            return response()->json([
+                'success' => true,
+                'paymentIntent' => $paymentIntent,
+                'clientSecret' => $paymentIntent->client_secret,
+                'message' => 'Order Place Successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
         }
 
-        $cart = Cart::where('user_id', Auth::id());
-
-        $cart->get();
-
-        $total_amount = $cart->sum('price');
-
-        $cart->delete();
-
-        return redirect()->route('payment', $total_amount)->with('total', $total_amount);
-        // return view('stripe',compact('total_amount'));
     }
 
     public function success()

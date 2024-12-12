@@ -165,7 +165,7 @@
                                 <input type="hidden" name="product_price" value="{{ $product->product_price }}">
 
                                 @if ($product->product_qty == 0)
-                                    <input type="submit" value="Add to Cart" class="btn btn-primary" disabled>
+                                    <input type="submit" value="Out Of Stock" class="btn btn-primary" disabled>
                                 @else
                                     <input type="submit" value="Add to Cart" class="btn btn-primary">
                                 @endif

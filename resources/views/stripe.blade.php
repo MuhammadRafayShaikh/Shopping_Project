@@ -40,68 +40,7 @@
         </form>
     </div>
 
-    <script>
-        const stripe = Stripe(
-            'pk_test_51QC2ODIe4idSW70t3KGivHvvWGDachFhshcM3FC3kUOGiog9iupBTWRzeSR622duJ94Vzpuk034kvUAHK9OdviY100JX1FOvsF'
-        );
-        const elements = stripe.elements();
 
-        const cardNumberElement = elements.create('cardNumber');
-        cardNumberElement.mount('#card-number');
-
-        const cardExpiryElement = elements.create('cardExpiry');
-        cardExpiryElement.mount('#expiry');
-
-        const cardCvcElement = elements.create('cardCvc');
-        cardCvcElement.mount('#cvv');
-
-        $(document).ready(function() {
-            $('#payment-form').on('submit', function(event) {
-                event.preventDefault();
-
-                var total_amount = $("#total_amount").val();
-
-                stripe.createPaymentMethod({
-                    type: 'card',
-                    card: cardNumberElement,
-                    billing_details: {
-                        address: {
-                            postal_code: $('#zip').val(),
-                        },
-                    },
-                }).then(function(result) {
-                    if (result.error) {
-                        $('#card-errors').text(result.error.message);
-                    } else {
-                        $.ajax({
-                            url: '/payment',
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                                    'content'),
-                                'Content-Type': 'application/json'
-                            },
-                            data: JSON.stringify({
-                                stripeToken: result.paymentMethod.id,
-                                amount: total_amount,
-                            }),
-                            success: function(data) {
-                                $('#payment-response').text(data.success ?
-                                    'Payment Successful!' : data.error);
-                                setTimeout(function() {
-                                    window.location.href = '/cart'
-                                }, 1000);
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
-                                $('#payment-response').text('An error occurred: ' +
-                                    errorThrown);
-                            }
-                        });
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>

@@ -63,7 +63,7 @@ Route::resource('review', ReviewController::class);
 Route::post('review/{id}', [ReviewController::class, 'store'])->name('review.store')->middleware('auth');
 Route::delete('review/{id}/{pid}', [ReviewController::class, 'destroy'])->name('review.destroy');
 Route::get('/payment/{amount}', [PaymentController::class, 'payment'])->name('payment');
-Route::post('/payment', [PaymentController::class, 'createPayment']);
+Route::post('/payment', [OrderController::class, 'placeOrder']);
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
