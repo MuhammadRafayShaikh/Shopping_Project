@@ -83,7 +83,7 @@ class OrderController extends Controller
             $order = new Order();
             $order->user_id = Auth::id();
             $order->address = $request->address;
-            $order->total_price = $totalPrice;
+            $order->total_price = $request->amount;
             $order->payment_status = 'pending';
             $order->save();
 
@@ -113,7 +113,6 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()]);
         }
-
     }
 
     public function success()
